@@ -1,62 +1,39 @@
 import React from 'react'
 import { TodoList } from './components/TodoList'
-import { Context } from './Context'
+import { TodoListContext } from './TodoListContext'
+import { useTodoList } from './useTodoList'
 import './app.css'
 
 export const App = () => {
 
-  const [todos, setTodos] = React.useState([])
+  const {todos, addTodo, toggleTodo, removeTodo} = useTodoList()
   const [todoTitle, setTodoTitle] = React.useState('')
 
-  React.useEffect(() =>
-    setTodos(JSON.parse(localStorage.getItem('todos')) || []),
-    []
-  )
+  const handleTodoTitle = React.useCallback(e => {
+    setTodoTitle(e.target.value)
+  }, [setTodoTitle])
 
-  React.useEffect(() =>
-    localStorage.setItem('todos', JSON.stringify(todos)),
-    [todos]
-  )
-
-  const addTodo = key => {
-    if(key === 'Enter' && todoTitle !== '') {
-      const todo = {
-        title: todoTitle, done: false, id: Date.now()
-      }
-      setTodos(prev => [...prev, todo])
+  const handleAddTodo = React.useCallback(e => {
+    if(e.key === 'Enter' && todoTitle !== '') {
+      addTodo(todoTitle)
       setTodoTitle('')
     }
-  }
-
-  const toggleTodo = id => {
-    setTodos(
-      todos.map(item => {
-        if(item.id === id) {
-          item.done = !item.done
-        }
-        return item
-      })
-    )
-  }
-
-  const removeTodo = id => {
-    setTodos(todos.filter(item => item.id !== id))
-  }
+  }, [addTodo, setTodoTitle, todoTitle])
 
   return (
-    <Context.Provider value={{toggleTodo, removeTodo}}>
+    <TodoListContext.Provider value={{toggleTodo, removeTodo}}>
       <div className="mainwrap">
         <div className="content-area">
           <div className="todo-header">Todo List</div>
           <input
             className="todo-title"
             value={todoTitle}
-            onChange={e => setTodoTitle(e.target.value)}
-            onKeyPress={e => addTodo(e.key)}
+            onChange={handleTodoTitle}
+            onKeyPress={handleAddTodo}
           />
           <TodoList todos={todos} />
         </div>
       </div>
-    </Context.Provider>
+    </TodoListContext.Provider>
   )
 }
